@@ -34,7 +34,7 @@ ExternalProject_Add(
         -DGLFW_BUILD_TESTS=OFF
         _DGLFW_BUILD_DOCS=OFF
     )
-
+    
 set(DEP_LIST ${DEP_LIST} dep-glfw)
 set(DEP_LIBS $(DEP_LIBS) glfw3)
 
