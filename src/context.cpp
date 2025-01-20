@@ -100,6 +100,25 @@ void Context::Render() {
 
         ImGui::Separator();
 
+        ImGui::Text("Range Control for i:");
+        ImGui::DragInt("Start X", &startX, 1, 0, 105); // 최소 0, 최대 100
+        ImGui::DragInt("End X", &endX, 1, 0, 105);
+
+        // j 범위 제어
+        ImGui::Text("Range Control for j:");
+        ImGui::DragInt("Start Y", &startY, 1, 0, 105);
+        ImGui::DragInt("End Y", &endY, 1, 0, 105);
+
+        // k 범위 제어
+        ImGui::Text("Range Control for k:");
+        ImGui::DragInt("Start Z", &startZ, 1, 0, 35);
+        ImGui::DragInt("End Z", &endZ, 1, 0, 35);
+
+        // 화살표 크기 제어
+        ImGui::Text("Arrow Scale:");
+        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.01f, 0.1f, 2.0f); // 최소 0.1, 최대 2.0
+
+        ImGui::Separator();
         if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::DragFloat3("l.position", glm::value_ptr(m_light.position), 0.01f);
             ImGui::DragFloat3("l.direction", glm::value_ptr(m_light.direction), 0.01f);
@@ -234,7 +253,7 @@ glm::vec4 Context::vectorColor(float x, float y, float z)
 
 void Context::ProcessInput(GLFWwindow* window) {
 
-    const float cameraSpeed = 0.02f;
+    const float cameraSpeed = 1.2f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         m_cameraPos += cameraSpeed * m_cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
