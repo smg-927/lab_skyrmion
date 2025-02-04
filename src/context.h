@@ -18,7 +18,8 @@ public:
     static ContextUPtr Create();
     void Render();    
     glm::mat4 normalizeandrot(float z, float y, float x);
-    glm::vec4 vectorColor(float x, float y, float z);
+    glm::vec4 vectorColorZ(float x, float y, float z);
+    glm::vec4 vectorColorXY(float x, float y, float z);
     void ProcessInput(GLFWwindow* window);
     void Reshape(int width, int height);
     void MouseMove(double x, double y);
@@ -38,10 +39,11 @@ private:
 
     DataLoaderUPtr m_data;
     // animation
-    bool m_animation { true };
+    bool m_animation { false };
+    bool m_colormode { false };
 
     // clear color
-    glm::vec4 m_clearColor { glm::vec4(0.1f, 0.2f, 0.3f, 0.0f) };
+    glm::vec4 m_clearColor { glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) };
 
     // light parameter
     struct Light {
@@ -66,7 +68,7 @@ private:
     glm::vec2 m_prevMousePos { glm::vec2(0.0f) };
     float m_cameraPitch { -20.0f };
     float m_cameraYaw { 0.0f };
-	glm::vec3 m_cameraPos { glm::vec3(0.0f, 2.5f, 8.0f) };
+	glm::vec3 m_cameraPos { glm::vec3(-24.0f, 100.0f, 89.0f) };
     glm::vec3 m_cameraFront { glm::vec3(0.0f, 0.0f, -1.0f) };
     glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
 
@@ -83,9 +85,11 @@ private:
 
     std::vector<std::vector<std::vector<std::vector<float>>>> data;
 
-    int startX = 37, endX = 62; // i 범위
-    int startY = 35, endY = 55; // j 범위
-    int startZ = 10, endZ = 28; // k 범위
+    glm::vec3 rawdatalength {112, 112, 52};
+
+    int startX = 0, endX = 1; // i 범위
+    int startY = 0, endY = 1; // j 범위
+    int startZ = 0, endZ = 1; // k 범위
     float arrowscale = 0.3;
 };
 

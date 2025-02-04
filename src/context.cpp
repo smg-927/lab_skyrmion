@@ -28,7 +28,7 @@ bool Context::Init() {
 
     m_envMapProgram = Program::Create("./shader/env_map.vs", "./shader/env_map.fs");
     
-    glClearColor(0.1f, 0.2f, 0.3f, 0.0f);
+    glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
    
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
     Image::CreateSingleColorImage(4, 4,
@@ -74,13 +74,21 @@ bool Context::Init() {
     });
 
     m_data = DataLoader::Create();
-    m_data->ReadFile("P1p1.txt", 105, 105, 35, 0);
-    m_data->ReadFile("P2p1.txt", 105, 105, 35, 1);
-    m_data->ReadFile("P3p1.txt", 105, 105, 35, 2);
+    m_data->ReadFile("2ndP0.txt", rawdatalength, 0);
+    m_data->ReadFile("2ndP1.txt", rawdatalength, 1);
+    m_data->ReadFile("2ndP2.txt", rawdatalength, 2);
+
+    m_data->ReduceAndAverage();
 
     data = m_data->GetData();
     
     m_cameraPos = glm::vec3(startX, startY, startZ);
+
+    endX = data.size()-1;
+    endY = data[0].size() -1;
+    startZ = data[0][0].size()/2;
+    endZ = (data[0][0].size()/2) + 1;
+
     return true;
 }
 
@@ -109,17 +117,17 @@ void Context::Render() {
 
         ImGui::Separator();
 
-        ImGui::Text("Range Control for i:");
-        ImGui::DragInt("Start X", &startX, 1, 0, 105);
-        ImGui::DragInt("End X", &endX, 1, 0, 105);
+        ImGui::Text("Range Control for x:");
+        ImGui::DragInt("Start X", &startX, 0.3, 0, data.size());
+        ImGui::DragInt("End X", &endX, 0.3, 0, data.size());
 
-        ImGui::Text("Range Control for j:");
-        ImGui::DragInt("Start Y", &startY, 1, 0, 105);
-        ImGui::DragInt("End Y", &endY, 1, 0, 105);
+        ImGui::Text("Range Control for y:");
+        ImGui::DragInt("Start Y", &startY, 0.3, 0,data[0].size());
+        ImGui::DragInt("End Y", &endY, 0.3, 0, data[0].size());
 
-        ImGui::Text("Range Control for k:");
-        ImGui::DragInt("Start Z", &startZ, 1, 0, 35);
-        ImGui::DragInt("End Z", &endZ, 1, 0, 35);
+        ImGui::Text("Range Control for z:");
+        ImGui::DragInt("Start Z", &startZ, 0.3, 0, data[0][0].size());
+        ImGui::DragInt("End Z", &endZ, 0.3, 0, data[0][0].size());
 
         ImGui::Text("Arrow Scale:");
         ImGui::DragFloat("Arrow Scale", &arrowscale, 0.01f, 0.1f, 2.0f);
@@ -138,6 +146,7 @@ void Context::Render() {
         }
 
         ImGui::Checkbox("animation", &m_animation);
+        ImGui::Checkbox("Colormode: check = XY, Uncheck = Z", &m_colormode);
 
     }
     ImGui::End();
@@ -210,23 +219,43 @@ void Context::Render() {
 
     m_simpleProgram->Use();
 
+    if(m_animation)
+    {
+        startZ = (int)(glfwGetTime() * 9) % (data[0][0].size()-2);
+        endZ = startZ + 2;
+    }
+
     for (int i = startX; i < endX; i++) {
         for (int j = startY; j < endY; j++) {
             for (int k = startZ; k < endZ; k++) {
                 // Position transformation
-                glm::mat4 movemat = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f * k, 2.0f * j, 2.0f * i));
+                glm::mat4 movemat = glm::translate(glm::mat4(1.0f), glm::vec3(k, j, i));
 
                 // Rotation transformation using the normalized vector
                 const auto& vec = data[i][j][k];
                 glm::mat4 rotmat = normalizeandrot(vec[0], vec[1], vec[2]);
                 // Color calculation
-                glm::vec4 arrowcolor = vectorColor(vec[0], vec[1], vec[2]);
-                glm::mat4 arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(arrowscale, arrowscale, arrowscale));
+                glm::vec4 arrowcolor;
+                if(m_colormode)
+                {
+                    arrowcolor = vectorColorXY(vec[0], vec[1], vec[2]);
+                }
+                else
+                {
+                    arrowcolor = vectorColorZ(vec[0], vec[1], vec[2]);
+                }
+                glm::mat4 arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(arrowscale*3, arrowscale, arrowscale));
                 // Combine transformations and apply to shader
                 glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
                 m_simpleProgram->SetUniform("transform", modelMatrix);
                 m_simpleProgram->SetUniform("color", arrowcolor);
+                // 색이 있을 때만 출력하도록 변경 
+                // if(arrowcolor[0] + arrowcolor[1] + arrowcolor[2] >0.6f)
+                // {
+                //     m_arrow->Draw(m_simpleProgram.get());
+                // }
                 m_arrow->Draw(m_simpleProgram.get());
+                
             }
         }
     }
@@ -253,12 +282,44 @@ glm::mat4 Context::normalizeandrot(float z, float y, float x)
 	return rotphi * rottheta;
 }
 
-glm::vec4 Context::vectorColor(float x, float y, float z)
+glm::vec4 Context::vectorColorZ(float x, float y, float z)
 {
-	float ztheta = z / sqrt(x * x + y * y + z * z);
+    float magnitude = sqrt(x * x + y * y + z * z);
 
-	return glm::vec4(-ztheta,0,ztheta*0.5,1);
+	 float nz = z / magnitude;
+
+	return glm::vec4(-nz,0,nz*0.5,1);
 };
+
+glm::vec4 Context::vectorColorXY(float x, float y, float z)
+{
+    // 벡터 크기 계산
+    float magnitude = sqrt(x * x + y * y + z * z);
+
+    // 각 성분을 정규화
+    float nx = x / magnitude;
+    float ny = y / magnitude;
+    float nz = z / magnitude;
+
+    // 색상 계산
+    float red = std::max(0.0f, nx);     // +x 방향: 빨강
+    float cyan = std::max(0.0f, -nx);  // -x 방향: 시안 (빨강의 보색)
+    float green = std::max(0.0f, ny);  // +y 방향: 초록
+    float magenta = std::max(0.0f, -ny); // -y 방향: 마젠타 (초록의 보색)
+
+    // z 방향 성분이 클수록 검정색에 가까워짐
+    float zFactor = nz; // nz는 [0, 1] 범위에서 검정색 효과를 줄 변수
+    float intensity = 1.0f - fabs(zFactor); // z 성분에 따른 강도 감소
+
+    // 최종 색상 혼합
+    float finalRed = (red + magenta) * intensity;
+    float finalGreen = (green + cyan) * intensity;
+    float finalBlue = (cyan + magenta) * intensity;
+
+    // 알파 값은 항상 1로 설정
+    return glm::vec4(finalRed, finalGreen, finalBlue, 1.0f);
+};
+
 
 void Context::ProcessInput(GLFWwindow* window) {
 
@@ -281,6 +342,16 @@ void Context::ProcessInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         m_cameraPos -= cameraSpeed * cameraUp;
 
+    // bool isKeyPressed = false;
+
+    // if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_KEY_DOWN) {
+    //     if (!isKeyPressed) {
+    //         m_animation = !m_animation; // 애니메이션 상태 토글
+    //         isKeyPressed = true;        // 키가 눌렸음을 표시
+    //     }
+    // } else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+    //     isKeyPressed = false; // 키가 눌리지 않았음을 표시
+    // }
 }
 
 void Context::Reshape(int width, int height) {
