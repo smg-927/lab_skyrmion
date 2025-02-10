@@ -85,7 +85,9 @@ private:
 
     std::vector<std::vector<std::vector<std::vector<float>>>> data;
 
-    glm::vec3 rawdatalength {112, 112, 52};
+    glm::vec3 rawdatalength {168, 168, 52};
+    
+    //
 
     int startX = 0, endX = 1; // i 범위
     int startY = 0, endY = 1; // j 범위

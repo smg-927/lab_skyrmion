@@ -74,9 +74,9 @@ bool Context::Init() {
     });
 
     m_data = DataLoader::Create();
-    m_data->ReadFile("2ndP0.txt", rawdatalength, 0);
-    m_data->ReadFile("2ndP1.txt", rawdatalength, 1);
-    m_data->ReadFile("2ndP2.txt", rawdatalength, 2);
+    m_data->ReadFile("Data/T_200_Index_168/T_200_Index_168_X.txt", rawdatalength, 0);
+    m_data->ReadFile("Data/T_200_Index_168/T_200_Index_168_Y.txt", rawdatalength, 1);
+    m_data->ReadFile("Data/T_200_Index_168/T_200_Index_168_Z.txt", rawdatalength, 2);
 
     m_data->ReduceAndAverage();
 
