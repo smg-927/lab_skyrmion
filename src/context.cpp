@@ -74,11 +74,11 @@ bool Context::Init() {
     });
 
     m_data = DataLoader::Create();
-    m_data->ReadFile("Data/T_200_Index_168/T_200_Index_168_X.txt", rawdatalength, 0);
-    m_data->ReadFile("Data/T_200_Index_168/T_200_Index_168_Y.txt", rawdatalength, 1);
-    m_data->ReadFile("Data/T_200_Index_168/T_200_Index_168_Z.txt", rawdatalength, 2);
+    m_data->ReadFile("Data/T_300_index_168/T_300_index_168_X.txt", rawdatalength, 0);
+    m_data->ReadFile("Data/T_300_index_168/T_300_index_168_Y.txt", rawdatalength, 1);
+    m_data->ReadFile("Data/T_300_index_168/T_300_index_168_Z.txt", rawdatalength, 2);
 
-    m_data->ReduceAndAverage();
+    //m_data->ReduceAndAverage();
 
     data = m_data->GetData();
     
@@ -130,7 +130,7 @@ void Context::Render() {
         ImGui::DragInt("End Z", &endZ, 0.3, 0, data[0][0].size());
 
         ImGui::Text("Arrow Scale:");
-        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.01f, 0.1f, 2.0f);
+        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.01f, 0.1f, 5.0f);
 
         ImGui::Separator();
 
@@ -215,7 +215,7 @@ void Context::Render() {
     m_program->SetUniform("transform", transform);
     m_program->SetUniform("modelTransform", modelTransform);
     m_planeMaterial->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
+    //m_box->Draw(m_program.get());
 
     m_simpleProgram->Use();
 
@@ -225,15 +225,19 @@ void Context::Render() {
         endZ = startZ + 2;
     }
 
+    glm::mat4 movemat;
+    glm::mat4 rotmat;
+    glm::mat4 arrowscalemat;
+
     for (int i = startX; i < endX; i++) {
         for (int j = startY; j < endY; j++) {
             for (int k = startZ; k < endZ; k++) {
                 // Position transformation
-                glm::mat4 movemat = glm::translate(glm::mat4(1.0f), glm::vec3(k, j, i));
+                movemat = glm::translate(glm::mat4(1.0f), glm::vec3(i*10,j*10,k*10));
 
                 // Rotation transformation using the normalized vector
                 const auto& vec = data[i][j][k];
-                glm::mat4 rotmat = normalizeandrot(vec[0], vec[1], vec[2]);
+                rotmat = normalizeandrot(vec[0], vec[1], vec[2]);
                 // Color calculation
                 glm::vec4 arrowcolor;
                 if(m_colormode)
@@ -244,7 +248,7 @@ void Context::Render() {
                 {
                     arrowcolor = vectorColorZ(vec[0], vec[1], vec[2]);
                 }
-                glm::mat4 arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(arrowscale*3, arrowscale, arrowscale));
+                arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(arrowscale*3, arrowscale, arrowscale));
                 // Combine transformations and apply to shader
                 glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
                 m_simpleProgram->SetUniform("transform", modelMatrix);
@@ -255,13 +259,25 @@ void Context::Render() {
                 //     m_arrow->Draw(m_simpleProgram.get());
                 // }
                 m_arrow->Draw(m_simpleProgram.get());
-                
             }
         }
     }
-}
 
-glm::mat4 Context::normalizeandrot(float z, float y, float x)
+    movemat = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f,-3.0f,-3.0f));
+    rotmat = normalizeandrot(0.01f,1.0f,0.0f);
+    glm::vec4 arrowcolor = vectorColorZ(1.0f,0.0f,0.0f);
+    arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f,5.0f,5.0f));
+    glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
+    m_simpleProgram->SetUniform("transform", modelMatrix);
+    m_simpleProgram->SetUniform("color", arrowcolor);
+    m_arrow->Draw(m_simpleProgram.get());
+    rotmat = normalizeandrot(1.0f,.0f,0.0f);
+    modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
+    m_simpleProgram->SetUniform("transform", modelMatrix);
+    m_arrow->Draw(m_simpleProgram.get());
+}   
+
+glm::mat4 Context::normalizeandrot(float x, float y, float z)
 {
 	float theta = sqrt(x*x+z*z)/ sqrt(x * x + y * y + z * z);
 	float phi = x / sqrt(x * x + z * z);
@@ -276,8 +292,8 @@ glm::mat4 Context::normalizeandrot(float z, float y, float x)
 	if (z < 0)
 		phi = -phi;
 
-	glm::mat4 rotphi = glm::rotate(glm::mat4(1.0f), glm::radians(phi), glm::vec3(0.f, 1.f, 0.f));
-	glm::mat4 rottheta = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0.f, 1.f, 0.f));
+	glm::mat4 rotphi = glm::rotate(glm::mat4(1.0f), -glm::radians(phi), glm::vec3(0.f, 1.f, 0.f)); // 좌표계 조정했음
+	glm::mat4 rottheta = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0.f, 0.f, 1.f));
 
 	return rotphi * rottheta;
 }

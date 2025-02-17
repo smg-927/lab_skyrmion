@@ -85,14 +85,14 @@ private:
 
     std::vector<std::vector<std::vector<std::vector<float>>>> data;
 
-    glm::vec3 rawdatalength {168, 168, 52};
+    glm::vec3 rawdatalength {168, 168, 13};
     
     //
 
     int startX = 0, endX = 1; // i 범위
     int startY = 0, endY = 1; // j 범위
     int startZ = 0, endZ = 1; // k 범위
-    float arrowscale = 0.3;
+    float arrowscale = 3.0;
 };
 
 #endif // __CONTEXT_H__
