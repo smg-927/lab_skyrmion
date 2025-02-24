@@ -16,17 +16,17 @@ bool Context::Init() {
     m_plane = Mesh::CreatePlane();
     m_arrow = Mesh::CreateArrow();
 
-    m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
+    m_simpleProgram = Program::Create("../../shader/simple.vs", "../../shader/simple.fs");
 
-    m_program = Program::Create("./shader/lighting.vs", "./shader/lighting.fs");
+    m_program = Program::Create("../../shader/lighting.vs", "../../shader/lighting.fs");
 
-    m_textureProgram = Program::Create("./shader/texture.vs", "./shader/texture.fs");
+    m_textureProgram = Program::Create("../../shader/texture.vs", "../../shader/texture.fs");
 
-    m_postProgram = Program::Create("./shader/texture.vs", "./shader/gamma.fs");
+    m_postProgram = Program::Create("../../shader/texture.vs", "../../shader/gamma.fs");
 
-    m_skyboxProgram = Program::Create("./shader/skybox.vs", "./shader/skybox.fs");
+    m_skyboxProgram = Program::Create("../../shader/skybox.vs", "../../shader/skybox.fs");
 
-    m_envMapProgram = Program::Create("./shader/env_map.vs", "./shader/env_map.fs");
+    m_envMapProgram = Program::Create("../../shader/env_map.vs", "../../shader/env_map.fs");
     
     glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
    
@@ -40,13 +40,13 @@ bool Context::Init() {
             
     m_planeMaterial = Material::Create();
     m_planeMaterial->diffuse = Texture::CreateFromImage(
-        Image::Load("./image/marble.jpg").get());
+        Image::Load("../../image/marble.jpg").get());
     m_planeMaterial->specular = grayTexture;
     m_planeMaterial->shininess = 128.0f;
 
     m_box1Material = Material::Create();
     m_box1Material->diffuse = Texture::CreateFromImage(
-        Image::Load("./image/container.jpg").get());
+        Image::Load("../../image/container.jpg").get());
     m_box1Material->specular = darkGrayTexture;
     m_box1Material->shininess = 16.0f;
 
@@ -56,14 +56,14 @@ bool Context::Init() {
     m_arrowMaterial->shininess = 128.0f;
 
     m_windowTexture = Texture::CreateFromImage(
-        Image::Load("./image/blending_transparent_window.png").get());
+        Image::Load("../../image/blending_transparent_window.png").get());
 
-    auto cubeRight = Image::Load("./image/skybox/right.jpg", false);
-    auto cubeLeft = Image::Load("./image/skybox/left.jpg", false);
-    auto cubeTop = Image::Load("./image/skybox/top.jpg", false);
-    auto cubeBottom = Image::Load("./image/skybox/bottom.jpg", false);
-    auto cubeFront = Image::Load("./image/skybox/front.jpg", false);
-    auto cubeBack = Image::Load("./image/skybox/back.jpg", false);
+    auto cubeRight = Image::Load("../../image/skybox/right.jpg", false);
+    auto cubeLeft = Image::Load("../../image/skybox/left.jpg", false);
+    auto cubeTop = Image::Load("../../image/skybox/top.jpg", false);
+    auto cubeBottom = Image::Load("../../image/skybox/bottom.jpg", false);
+    auto cubeFront = Image::Load("../../image/skybox/front.jpg", false);
+    auto cubeBack = Image::Load("../../image/skybox/back.jpg", false);
     m_cubeTexture = CubeTexture::CreateFromImages({
         cubeRight.get(),
         cubeLeft.get(),
@@ -74,9 +74,9 @@ bool Context::Init() {
     });
 
     m_data = DataLoader::Create();
-    m_data->ReadFile("Data/T_300_index_168/T_300_index_168_X.txt", rawdatalength, 0);
-    m_data->ReadFile("Data/T_300_index_168/T_300_index_168_Y.txt", rawdatalength, 1);
-    m_data->ReadFile("Data/T_300_index_168/T_300_index_168_Z.txt", rawdatalength, 2);
+    m_data->ReadFile("../../Data/T_300_index_168/T_300_index_168_X.txt", rawdatalength, 0);
+    m_data->ReadFile("../../Data/T_300_index_168/T_300_index_168_Y.txt", rawdatalength, 1);
+    m_data->ReadFile("../../Data/T_300_index_168/T_300_index_168_Z.txt", rawdatalength, 2);
 
     //m_data->ReduceAndAverage();
 
@@ -248,7 +248,14 @@ void Context::Render() {
                 {
                     arrowcolor = vectorColorZ(vec[0], vec[1], vec[2]);
                 }
-                arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(arrowscale*3, arrowscale, arrowscale));
+
+                // normalize 하지 않는 화살표 크기 계산
+                float vararrowscale = 1.0f;
+                vararrowscale = calculatearrowscale(vec[0], vec[1], vec[2]);
+
+                arrowscalemat = glm::scale(glm::mat4(1.0f), 
+                                glm::vec3(vararrowscale * arrowscale*3, vararrowscale * arrowscale, vararrowscale * arrowscale));
+
                 // Combine transformations and apply to shader
                 glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
                 m_simpleProgram->SetUniform("transform", modelMatrix);
@@ -276,6 +283,11 @@ void Context::Render() {
     m_simpleProgram->SetUniform("transform", modelMatrix);
     m_arrow->Draw(m_simpleProgram.get());
 }   
+
+float Context::calculatearrowscale(float x, float y, float z)
+{
+    return sqrt(x*x + y*y + z*z) * 10;
+}
 
 glm::mat4 Context::normalizeandrot(float x, float y, float z)
 {

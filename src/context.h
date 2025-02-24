@@ -17,7 +17,8 @@ class Context {
 public:
     static ContextUPtr Create();
     void Render();    
-    glm::mat4 normalizeandrot(float z, float y, float x);
+    float calculatearrowscale(float x, float y, float z);
+    glm::mat4 normalizeandrot(float x, float y, float z);
     glm::vec4 vectorColorZ(float x, float y, float z);
     glm::vec4 vectorColorXY(float x, float y, float z);
     void ProcessInput(GLFWwindow* window);
