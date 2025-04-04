@@ -74,9 +74,9 @@ bool Context::Init() {
     });
 
     m_data = DataLoader::Create();
-    m_data->ReadFile("../../Data/T_300_index_168/T_300_index_168_X.txt", rawdatalength, 0);
-    m_data->ReadFile("../../Data/T_300_index_168/T_300_index_168_Y.txt", rawdatalength, 1);
-    m_data->ReadFile("../../Data/T_300_index_168/T_300_index_168_Z.txt", rawdatalength, 2);
+    m_data->ReadFile("../../Data/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01_Xparsed.txt", rawdatalength, 0);
+    m_data->ReadFile("../../Data/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01_Yparsed.txt", rawdatalength, 1);
+    m_data->ReadFile("../../Data/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01_Zparsed.txt", rawdatalength, 2);
 
     //m_data->ReduceAndAverage();
 
@@ -130,7 +130,7 @@ void Context::Render() {
         ImGui::DragInt("End Z", &endZ, 0.3, 0, data[0][0].size());
 
         ImGui::Text("Arrow Scale:");
-        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.01f, 0.1f, 5.0f);
+        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.001f, 0.01f, 0.5f);
 
         ImGui::Separator();
 
@@ -146,7 +146,13 @@ void Context::Render() {
         }
 
         ImGui::Checkbox("animation", &m_animation);
-        ImGui::Checkbox("Colormode: check = XY, Uncheck = Z", &m_colormode);
+        static int colorMode = 1;
+        ImGui::Text("Color Mode:");
+        if (ImGui::RadioButton("XY axis", &colorMode, 0)) colormode = XY;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Y plane", &colorMode, 1)) colormode = Y;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Z axis", &colorMode, 2)) colormode = Z;
 
     }
     ImGui::End();
@@ -219,6 +225,58 @@ void Context::Render() {
 
     m_simpleProgram->Use();
 
+    // 좌표계 렌더링
+    float axisLength = 20.0f; // 좌표계 축의 길이
+    float axisThickness = 0.1f; // 축의 두께
+
+    // X축 
+    glm::mat4 xAxisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(axisLength/2 - 20, 0.0f, 0.0f)) *
+                              glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+                              glm::scale(glm::mat4(1.0f), glm::vec3(axisLength, axisThickness, axisThickness));
+    m_simpleProgram->SetUniform("transform", projection * view * xAxisTransform);
+    m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    m_box->Draw(m_simpleProgram.get());
+
+    // -X축 
+    glm::mat4 negXAxisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-axisLength/2 - 20, 0.0f, 0.0f)) *
+                                 glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+                                 glm::scale(glm::mat4(1.0f), glm::vec3(axisLength, axisThickness, axisThickness));
+    m_simpleProgram->SetUniform("transform", projection * view * negXAxisTransform);
+    m_simpleProgram->SetUniform("color", glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    m_box->Draw(m_simpleProgram.get());
+
+    // Y축 
+    glm::mat4 yAxisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f, axisLength/2, 0.0f)) *
+                              glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
+                              glm::scale(glm::mat4(1.0f), glm::vec3(axisLength, axisThickness, axisThickness));
+    m_simpleProgram->SetUniform("transform", projection * view * yAxisTransform);
+    m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    m_box->Draw(m_simpleProgram.get());
+
+    // -Y축
+    glm::mat4 negYAxisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f, -axisLength/2, 0.0f)) *
+                                 glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
+                                 glm::scale(glm::mat4(1.0f), glm::vec3(axisLength, axisThickness, axisThickness));
+    m_simpleProgram->SetUniform("transform", projection * view * negYAxisTransform);
+    m_simpleProgram->SetUniform("color", glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    m_box->Draw(m_simpleProgram.get());
+
+    // Z축 
+    glm::mat4 zAxisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f, 0.0f, axisLength/2)) *
+                              glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                              glm::scale(glm::mat4(1.0f), glm::vec3(axisLength, axisThickness, axisThickness));
+    m_simpleProgram->SetUniform("transform", projection * view * zAxisTransform);
+    m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    m_box->Draw(m_simpleProgram.get());
+
+    // -Z축
+    glm::mat4 negZAxisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f, 0.0f, -axisLength/2)) *
+                                 glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                                 glm::scale(glm::mat4(1.0f), glm::vec3(axisLength, axisThickness, axisThickness));
+    m_simpleProgram->SetUniform("transform", projection * view * negZAxisTransform);
+    m_simpleProgram->SetUniform("color", glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    m_box->Draw(m_simpleProgram.get());
+
     if(m_animation)
     {
         startZ = (int)(glfwGetTime() * 9) % (data[0][0].size()-2);
@@ -233,16 +291,20 @@ void Context::Render() {
         for (int j = startY; j < endY; j++) {
             for (int k = startZ; k < endZ; k++) {
                 // Position transformation
-                movemat = glm::translate(glm::mat4(1.0f), glm::vec3(i*10,j*10,k*10));
+                movemat = glm::translate(glm::mat4(1.0f), glm::vec3(i,j,k));
 
                 // Rotation transformation using the normalized vector
                 const auto& vec = data[i][j][k];
                 rotmat = normalizeandrot(vec[0], vec[1], vec[2]);
                 // Color calculation
                 glm::vec4 arrowcolor;
-                if(m_colormode)
+                if(colormode == XY)
                 {
                     arrowcolor = vectorColorXY(vec[0], vec[1], vec[2]);
+                }
+                else if(colormode == Y)
+                {
+                    arrowcolor = vectorColorY(vec[0], vec[1], vec[2]);
                 }
                 else
                 {
@@ -270,18 +332,7 @@ void Context::Render() {
         }
     }
 
-    movemat = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f,-3.0f,-3.0f));
-    rotmat = normalizeandrot(0.01f,1.0f,0.0f);
-    glm::vec4 arrowcolor = vectorColorZ(1.0f,0.0f,0.0f);
-    arrowscalemat = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f,5.0f,5.0f));
-    glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
-    m_simpleProgram->SetUniform("transform", modelMatrix);
-    m_simpleProgram->SetUniform("color", arrowcolor);
-    m_arrow->Draw(m_simpleProgram.get());
-    rotmat = normalizeandrot(1.0f,.0f,0.0f);
-    modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
-    m_simpleProgram->SetUniform("transform", modelMatrix);
-    m_arrow->Draw(m_simpleProgram.get());
+
 }   
 
 float Context::calculatearrowscale(float x, float y, float z)
@@ -316,8 +367,18 @@ glm::vec4 Context::vectorColorZ(float x, float y, float z)
 
 	 float nz = z / magnitude;
 
-	return glm::vec4(-nz,0,nz*0.5,1);
+	return glm::vec4(nz,0,-nz,1);
 };
+
+glm::vec4 Context::vectorColorY(float x, float y, float z)
+{
+    float magnitude = sqrt(x * x + y * y + z * z);
+
+	 float ny = y / magnitude;
+
+	return glm::vec4(ny,0,-ny,1);
+};
+
 
 glm::vec4 Context::vectorColorXY(float x, float y, float z)
 {

@@ -19,6 +19,7 @@ public:
     void Render();    
     float calculatearrowscale(float x, float y, float z);
     glm::mat4 normalizeandrot(float x, float y, float z);
+    glm::vec4 vectorColorY(float x, float y, float z);
     glm::vec4 vectorColorZ(float x, float y, float z);
     glm::vec4 vectorColorXY(float x, float y, float z);
     void ProcessInput(GLFWwindow* window);
@@ -41,7 +42,14 @@ private:
     DataLoaderUPtr m_data;
     // animation
     bool m_animation { false };
-    bool m_colormode { false };
+    enum m_colormode
+    {
+        XY,
+        Y,
+        Z,
+    };
+
+    m_colormode colormode = Y;
 
     // clear color
     glm::vec4 m_clearColor { glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) };
@@ -81,19 +89,19 @@ private:
     ProgramUPtr m_skyboxProgram;
     ProgramUPtr m_envMapProgram;
     
-    int m_width {WINDOW_WIDTH};
-    int m_height {WINDOW_HEIGHT};
+    int m_width {1080};
+    int m_height {720};
 
     std::vector<std::vector<std::vector<std::vector<float>>>> data;
 
-    glm::vec3 rawdatalength {168, 168, 13};
+    glm::vec3 rawdatalength {84, 3, 52};
     
     //
 
     int startX = 0, endX = 1; // i 범위
     int startY = 0, endY = 1; // j 범위
     int startZ = 0, endZ = 1; // k 범위
-    float arrowscale = 3.0;
+    float arrowscale = 0.05;
 };
 
 #endif // __CONTEXT_H__
