@@ -74,20 +74,21 @@ bool Context::Init() {
     });
 
     m_data = DataLoader::Create();
-    m_data->ReadFile("../../Data/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01_Xparsed.txt", rawdatalength, 0);
-    m_data->ReadFile("../../Data/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01_Yparsed.txt", rawdatalength, 1);
-    m_data->ReadFile("../../Data/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01/GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01_Zparsed.txt", rawdatalength, 2);
+    m_data->ReadFile("../../Data/NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E3/STO/NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E1_STOparsed.txt", rawdatalength, 0);
+    m_data->ReadFile("../../Data/NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E3/STO/NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E2_STOparsed.txt", rawdatalength, 1);
+    m_data->ReadFile("../../Data/NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E3/STO/NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E3_STOparsed.txt", rawdatalength, 2);
 
     //m_data->ReduceAndAverage();
+    //m_data->ExpandAndInterpolate();
 
     data = m_data->GetData();
-    
+
     m_cameraPos = glm::vec3(startX, startY, startZ);
 
-    endX = data.size()-1;
-    endY = data[0].size() -1;
-    startZ = data[0][0].size()/2;
-    endZ = (data[0][0].size()/2) + 1;
+    // 올바른 데이터 크기 계산
+    endX = data.size()/10;
+    endY = data[0].size()/10;
+    endZ = data[0][0].size()/10;
 
     return true;
 }
@@ -118,19 +119,19 @@ void Context::Render() {
         ImGui::Separator();
 
         ImGui::Text("Range Control for x:");
-        ImGui::DragInt("Start X", &startX, 0.3, 0, data.size());
-        ImGui::DragInt("End X", &endX, 0.3, 0, data.size());
+        ImGui::DragInt("Start X", &startX, 0.3, 0, data.size()-1);
+        ImGui::DragInt("End X", &endX, 0.3, 0, data.size()-1);
 
         ImGui::Text("Range Control for y:");
-        ImGui::DragInt("Start Y", &startY, 0.3, 0,data[0].size());
-        ImGui::DragInt("End Y", &endY, 0.3, 0, data[0].size());
+        ImGui::DragInt("Start Y", &startY, 0.3, 0, data[0].size()-1);
+        ImGui::DragInt("End Y", &endY, 0.3, 0, data[0].size()-1);
 
         ImGui::Text("Range Control for z:");
-        ImGui::DragInt("Start Z", &startZ, 0.3, 0, data[0][0].size());
-        ImGui::DragInt("End Z", &endZ, 0.3, 0, data[0][0].size());
+        ImGui::DragInt("Start Z", &startZ, 0.3, 0, data[0][0].size()-1);
+        ImGui::DragInt("End Z", &endZ, 0.3, 0, data[0][0].size()-1);
 
         ImGui::Text("Arrow Scale:");
-        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.001f, 0.01f, 0.5f);
+        ImGui::DragFloat("Arrow Scale", &arrowscale, 0.001f, 0.01f, 1.0f);
 
         ImGui::Separator();
 
@@ -281,17 +282,25 @@ void Context::Render() {
     {
         startZ = (int)(glfwGetTime() * 9) % (data[0][0].size()-2);
         endZ = startZ + 2;
+        if (endZ > data[0][0].size()) {
+            endZ = data[0][0].size();
+        }
     }
 
     glm::mat4 movemat;
     glm::mat4 rotmat;
     glm::mat4 arrowscalemat;
-
-    for (int i = startX; i < endX; i++) {
-        for (int j = startY; j < endY; j++) {
-            for (int k = startZ; k < endZ; k++) {
+    glm::mat4 movmatfortail;
+    {
+        movmatfortail = Context::movmatfortail();
+    }    //아이디어 1 검증용
+    
+    
+    for (int i = startX; i < endX && i < data.size(); i++) {
+        for (int j = startY; j < endY && j < data[i].size(); j++) {
+            for (int k = startZ; k < endZ && k < data[i][j].size(); k++) {
                 // Position transformation
-                movemat = glm::translate(glm::mat4(1.0f), glm::vec3(i,j,k));
+                movemat = glm::translate(glm::mat4(1.0f), glm::vec3(i*0.5f,j*0.5f,k*0.5f));
 
                 // Rotation transformation using the normalized vector
                 const auto& vec = data[i][j][k];
@@ -319,7 +328,7 @@ void Context::Render() {
                                 glm::vec3(vararrowscale * arrowscale*3, vararrowscale * arrowscale, vararrowscale * arrowscale));
 
                 // Combine transformations and apply to shader
-                glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat;
+                glm::mat4 modelMatrix = projection * view * movemat * rotmat * arrowscalemat * movmatfortail;
                 m_simpleProgram->SetUniform("transform", modelMatrix);
                 m_simpleProgram->SetUniform("color", arrowcolor);
                 // 색이 있을 때만 출력하도록 변경 
@@ -328,16 +337,16 @@ void Context::Render() {
                 //     m_arrow->Draw(m_simpleProgram.get());
                 // }
                 m_arrow->Draw(m_simpleProgram.get());
+
             }
         }
     }
-
-
 }   
 
 float Context::calculatearrowscale(float x, float y, float z)
 {
-    return sqrt(x*x + y*y + z*z) * 10;
+    //return sqrt(x*x + y*y + z*z) * 10;
+    return 0.1f;
 }
 
 glm::mat4 Context::normalizeandrot(float x, float y, float z)
@@ -356,7 +365,7 @@ glm::mat4 Context::normalizeandrot(float x, float y, float z)
 		phi = -phi;
 
 	glm::mat4 rotphi = glm::rotate(glm::mat4(1.0f), -glm::radians(phi), glm::vec3(0.f, 1.f, 0.f)); // 좌표계 조정했음
-	glm::mat4 rottheta = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 rottheta = glm::rotate(glm::mat4(1.0f), glm::radians(theta)*1.5f, glm::vec3(0.f, 0.f, 1.f));
 
 	return rotphi * rottheta;
 }
@@ -376,7 +385,21 @@ glm::vec4 Context::vectorColorY(float x, float y, float z)
 
 	 float ny = y / magnitude;
 
+    // 원래 세팅
+
+    
 	return glm::vec4(ny,0,-ny,1);
+
+
+    // 전부 파랑 or 빨강으로 변경
+    // if(ny > 0)
+    // {
+    //     return glm::vec4(1,0,0,1);
+    // }
+    // else
+    // {
+    //     return glm::vec4(0,0,1,1);
+    // }
 };
 
 
@@ -408,7 +431,6 @@ glm::vec4 Context::vectorColorXY(float x, float y, float z)
     // 알파 값은 항상 1로 설정
     return glm::vec4(finalRed, finalGreen, finalBlue, 1.0f);
 };
-
 
 void Context::ProcessInput(GLFWwindow* window) {
 
@@ -481,4 +503,10 @@ void Context::MouseButton(int button, int action, double x, double y) {
       m_cameraControl = false;
     }
   }
+}
+
+// 시각화를 위한 추가 함수들
+glm::mat4 Context::movmatfortail()
+{
+    return glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0.0f, 0.0f));
 }

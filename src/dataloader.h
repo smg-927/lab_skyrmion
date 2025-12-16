@@ -16,6 +16,7 @@ public:
     // 텍스트 파일에서 데이터를 읽어와 4차원 배열에 저장
     bool ReadFile(const std::string& filename, glm::vec3 datalength, int w);
     bool ReduceAndAverage();
+    bool ExpandAndInterpolate();
 
     // 데이터 접근 메서드
     const std::vector<std::vector<std::vector<std::vector<float>>>>& GetData() const;

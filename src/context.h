@@ -26,6 +26,9 @@ public:
     void Reshape(int width, int height);
     void MouseMove(double x, double y);
     void MouseButton(int button, int action, double x, double y);
+
+    glm::mat4 movmatfortail();
+
 private:
     Context() {}
     bool Init();
@@ -94,7 +97,7 @@ private:
 
     std::vector<std::vector<std::vector<std::vector<float>>>> data;
 
-    glm::vec3 rawdatalength {84, 3, 52};
+    glm::vec3 rawdatalength {180,180,9};
     
     //
 

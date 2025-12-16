@@ -9,6 +9,11 @@ T300_index_168: 168/168/13
 
 GroundState_TT_300_12UC_0.7x0.68_UP_2D_168_OrderParam_Lagrange_GroundState_T_300_12UC_Nx1_36_01
 - 168/3/52
+- 주목할 부분 x : 65 - 76
 
 NOrderParam_0.4grid_300K_12_84uc_3D_gen_STO12_12_gen_0_2_2_0H_mul_2d_300K
  - 84/3/52
+
+NOrderParam_0.4grid_180uc_2L_0000e_00_300K_PTO9STO9_gen_3d_37862_E3
+- PTObot, STO, PTOtop 세 부분으로 나뉨
+- 180/180/9
